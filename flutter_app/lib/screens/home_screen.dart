@@ -150,13 +150,15 @@ class _HomeScreenState extends State<HomeScreen> {
             SafeArea(
               child: Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 60),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 440),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        const SizedBox(height: 8),
                         // Top Navbar / Admin Shortcut
                         Align(
                           alignment: Alignment.topRight,
@@ -637,7 +639,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 28),
 
                         // Footer Credit with Clickable CTA to Binus CS Semarang
                         Material(
@@ -646,16 +648,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(20),
                             onTap: _openBinusCsUrl,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(color: const Color(0xFFE2E8F0)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 3),
+                                    color: Colors.black.withValues(alpha: 0.04),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
@@ -663,12 +665,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 alignment: WrapAlignment.center,
                                 spacing: 8,
-                                runSpacing: 4,
+                                runSpacing: 6,
                                 children: [
                                   const Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.school_rounded, color: Color(0xFFDC2626), size: 15),
+                                      Icon(Icons.school_rounded, color: Color(0xFFDC2626), size: 16),
                                       SizedBox(width: 6),
                                       Text(
                                         'Developed by Computer Science Binus @Semarang',
@@ -708,6 +710,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
+                        // Generous bottom spacing so footer never hits edge or gets cut off
+                        const SizedBox(height: 48),
                       ],
                     ),
                   ),

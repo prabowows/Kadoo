@@ -233,7 +233,8 @@ class _RoomScreenState extends State<RoomScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 80),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
               child: _buildBody(),

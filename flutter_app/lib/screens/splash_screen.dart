@@ -235,7 +235,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
                         // Animated 3-second Progress Indicator
                         SizedBox(
-                          width: 160,
+                          width: 180,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(10),
                             child: AnimatedBuilder(
@@ -243,7 +243,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                               builder: (context, _) {
                                 return LinearProgressIndicator(
                                   value: _progressController.value,
-                                  minHeight: 4,
+                                  minHeight: 5,
                                   backgroundColor: const Color(0xFFE2E8F0),
                                   valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFDC2626)),
                                 );
@@ -251,46 +251,55 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                             ),
                           ),
                         ),
+                        const SizedBox(height: 28),
+
+                        // Credit Badge: Placed directly below loading
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () async {
+                              const url = 'https://binus.ac.id/semarang/computer-science/';
+                              try {
+                                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                              } catch (_) {}
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.school_rounded, color: Color(0xFFDC2626), size: 16),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Developed by Computer Science Binus @Semarang',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF334155),
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                       ],
                     ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Bottom Credit Card
-            Positioned(
-              bottom: 24,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.school_rounded, color: Color(0xFFDC2626), size: 16),
-                      SizedBox(width: 8),
-                      Text(
-                        'Developed by Computer Science Binus @Semarang',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF334155),
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ),

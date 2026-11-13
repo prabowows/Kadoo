@@ -172,10 +172,34 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 14, top: 8, bottom: 8),
+            child: ElevatedButton.icon(
+              onPressed: _isSaving ? null : _saveRoom,
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_circle_rounded, size: 16),
+              label: const Text('Simpan Room', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFDC2626),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 80),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 540),
@@ -623,7 +647,8 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 28),
+                     // Generous top margin for create room button
+                    const SizedBox(height: 36),
 
                     // Submit Buttons
                     Row(
@@ -646,7 +671,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 14),
                         Expanded(
                           flex: 2,
                           child: ElevatedButton.icon(
@@ -677,7 +702,8 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    // Generous bottom margin so the buttons have ample breathing room
+                    const SizedBox(height: 48),
                   ],
                 ),
               ),

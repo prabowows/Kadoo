@@ -386,8 +386,8 @@ class _AdminScreenState extends State<AdminScreen> {
           onRefresh: _loadRooms,
           color: const Color(0xFFDC2626),
           child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 720),
@@ -413,14 +413,17 @@ class _AdminScreenState extends State<AdminScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFEF4444).withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(10),
@@ -448,7 +451,7 @@ class _AdminScreenState extends State<AdminScreen> {
                                     onTap: _logoutAdmin,
                                     borderRadius: BorderRadius.circular(8),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                       decoration: BoxDecoration(
                                         color: Colors.white.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(8),
@@ -473,16 +476,19 @@ class _AdminScreenState extends State<AdminScreen> {
                                   ),
                                 ],
                               ),
-                              ElevatedButton.icon(
-                                onPressed: _openCreateRoom,
-                                icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                                label: const Text('Buat Room Baru'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFDC2626),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: ElevatedButton.icon(
+                                  onPressed: _openCreateRoom,
+                                  icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                                  label: const Text('Buat Room Baru'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFDC2626),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                    textStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                                  ),
                                 ),
                               ),
                             ],
@@ -529,21 +535,41 @@ class _AdminScreenState extends State<AdminScreen> {
                           ),
                         ),
                         if (_rooms.isNotEmpty)
-                          TextButton.icon(
-                            onPressed: _openCreateRoom,
-                            icon: const Icon(Icons.add_circle_outline, size: 16, color: Color(0xFFDC2626)),
-                            label: const Text(
-                              '+ Tambah Event',
-                              style: TextStyle(
-                                color: Color(0xFFDC2626),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF1F2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFFECDD3)),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: _openCreateRoom,
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.add_circle_outline, size: 16, color: Color(0xFFDC2626)),
+                                      SizedBox(width: 6),
+                                      Text(
+                                        '+ Tambah Event',
+                                        style: TextStyle(
+                                          color: Color(0xFFDC2626),
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
 
                     // Rooms List
                     if (_loading)
@@ -584,7 +610,7 @@ class _AdminScreenState extends State<AdminScreen> {
                                 'Klik tombol di bawah untuk membuat room doorprize pertamamu!',
                                 style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 20),
                               ElevatedButton.icon(
                                 onPressed: _openCreateRoom,
                                 icon: const Icon(Icons.add_rounded),
@@ -592,9 +618,12 @@ class _AdminScreenState extends State<AdminScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFDC2626),
                                   foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  textStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
                                 ),
                               ),
+                              const SizedBox(height: 8),
                             ],
                           ),
                         ),
