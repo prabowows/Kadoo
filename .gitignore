@@ -23,6 +23,9 @@
 # misc
 .DS_Store
 *.pem
+*.log
+*.pyc
+__pycache__/
 
 # debug
 npm-debug.log*
@@ -39,3 +42,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# flutter / mobile
+**/build/
+**/.dart_tool/
+**/.pub-cache/
+**/.pub/
+**/.flutter-plugins*
+**/.gradle/
+**/android/.gradle/
+**/android/local.properties
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/.last_build_id
