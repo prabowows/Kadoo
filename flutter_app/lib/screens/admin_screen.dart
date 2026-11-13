@@ -8,6 +8,7 @@ import '../services/export_service.dart';
 import '../services/firebase_service.dart';
 import 'create_room_screen.dart';
 import 'room_screen.dart';
+import 'qr_scanner_screen.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -163,6 +164,244 @@ class _AdminScreenState extends State<AdminScreen> {
       );
       _loadRooms();
     }
+  }
+
+  Future<void> _scanGlobalQrTicket() async {
+    final scannedCode = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const QrScannerScreen(
+          title: 'Scan QR Tiket Hadiah',
+          helperText: 'Arahkan kamera ke QR Code tiket hadiah siswa',
+        ),
+      ),
+    );
+
+    if (scannedCode != null && scannedCode.trim().isNotEmpty) {
+      _verifyTicketGlobal(scannedCode.trim().toUpperCase());
+    }
+  }
+
+  Future<void> _verifyTicketGlobal(String code) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(color: Color(0xFFDC2626)),
+      ),
+    );
+
+    ParticipantLead? foundLead;
+    String? foundRoomCode;
+    String? foundRoomName;
+
+    for (final room in _rooms) {
+      final rCode = (room['code'] ?? '').toString().toUpperCase();
+      final rPin = (room['pin'] ?? '1234').toString();
+      try {
+        final res = await ApiService.getParticipants(rCode, rPin);
+        if (res['success'] == true && res['participants'] is List) {
+          final rawList = res['participants'] as List;
+          final participants = rawList.map((e) => ParticipantLead.fromJson(e as Map<String, dynamic>)).toList();
+          final match = participants.cast<ParticipantLead?>().firstWhere(
+            (p) => p?.claimCode.toUpperCase() == code,
+            orElse: () => null,
+          );
+          if (match != null) {
+            foundLead = match;
+            foundRoomCode = rCode;
+            foundRoomName = room['name'] ?? rCode;
+            break;
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
+
+    if (foundLead != null && foundRoomCode != null && mounted) {
+      _showVerifiedTicketModal(foundLead, foundRoomCode, foundRoomName ?? 'Event');
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Kode tiket "$code" tidak ditemukan di event Anda.'),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+    }
+  }
+
+  void _showVerifiedTicketModal(ParticipantLead lead, String roomCode, String roomName) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: const Row(
+                children: [
+                  Icon(Icons.verified_rounded, color: Color(0xFFDC2626), size: 24),
+                  SizedBox(width: 8),
+                  Text('Verifikasi Tiket Hadiah', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
+                ],
+              ),
+              content: SizedBox(
+                width: 380,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: lead.isClaimed ? const Color(0xFF6EE7B7) : const Color(0xFFFDE68A),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  lead.claimCode,
+                                  style: const TextStyle(
+                                    color: Color(0xFFDC2626),
+                                    fontWeight: FontWeight.w900,
+                                    fontFamily: 'monospace',
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: lead.isClaimed ? const Color(0xFFD1FAE5) : const Color(0xFFFEF3C7),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    lead.isClaimed ? '✓ Sudah Diambil' : 'Belum Diambil',
+                                    style: TextStyle(
+                                      color: lead.isClaimed ? const Color(0xFF065F46) : const Color(0xFF92400E),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 16),
+                            Text(
+                              'Pemenang: ${lead.fullName}',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F172A)),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${lead.schoolName} (${lead.schoolCity})',
+                              style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                            ),
+                            const SizedBox(height: 2),
+                            Text('Event: $roomName ($roomCode)', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+                            const SizedBox(height: 2),
+                            Text('WA: ${lead.waNumber}', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+                            const SizedBox(height: 10),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF1F2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Text('🎁', style: TextStyle(fontSize: 22)),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'HADIAH BERHAK DITERIMA:',
+                                          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 9, fontWeight: FontWeight.bold),
+                                        ),
+                                        Text(
+                                          lead.prizeWon,
+                                          style: const TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.w900, fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            if (!lead.isClaimed)
+                              SizedBox(
+                                width: double.infinity,
+                                height: 46,
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    final ok = await ApiService.toggleClaim(lead.id);
+                                    if (ok) {
+                                      setDialogState(() {
+                                        lead.isClaimed = true;
+                                      });
+                                      setState(() {});
+                                      SoundService.playClaimSuccess();
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF059669),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  ),
+                                  icon: const Icon(Icons.check_circle_rounded, size: 20),
+                                  label: const Text(
+                                    'KONFIRMASI SERAHKAN HADIAH',
+                                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+                                  ),
+                                ),
+                              )
+                            else
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD1FAE5),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    '✓ Hadiah telah diserahkan & status terverifikasi.',
+                                    style: TextStyle(color: Color(0xFF065F46), fontSize: 11, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Tutup', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _openRoomDetail(Map<String, dynamic> room) {
@@ -371,16 +610,6 @@ class _AdminScreenState extends State<AdminScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openCreateRoom,
-        backgroundColor: const Color(0xFFDC2626),
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_circle_rounded, size: 22),
-        label: const Text(
-          'Buat Room Baru',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5),
-        ),
-      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadRooms,
@@ -476,20 +705,37 @@ class _AdminScreenState extends State<AdminScreen> {
                                   ),
                                 ],
                               ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4),
-                                child: ElevatedButton.icon(
-                                  onPressed: _openCreateRoom,
-                                  icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                                  label: const Text('Buat Room Baru'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFDC2626),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                    textStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: _scanGlobalQrTicket,
+                                    icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                                    label: const Text('Scan QR Hadiah'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white.withValues(alpha: 0.18),
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                      textStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                                    ),
                                   ),
-                                ),
+                                  ElevatedButton.icon(
+                                    onPressed: _openCreateRoom,
+                                    icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                                    label: const Text('Buat Room Baru'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFDC2626),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                      textStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -1411,8 +1657,28 @@ class _RoomDetailAdminScreenState extends State<RoomDetailAdminScreen> with Sing
     }
   }
 
-  void _openVerifyDialog() {
-    _verifyCodeCtrl.clear();
+  Future<void> _scanQrTicket() async {
+    final scannedCode = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const QrScannerScreen(
+          title: 'Scan QR Tiket Hadiah',
+          helperText: 'Arahkan kamera ke QR Code tiket hadiah siswa',
+        ),
+      ),
+    );
+
+    if (scannedCode != null && scannedCode.trim().isNotEmpty) {
+      _openVerifyDialog(initialCode: scannedCode.trim().toUpperCase());
+    }
+  }
+
+  void _openVerifyDialog({String? initialCode}) {
+    if (initialCode != null) {
+      _verifyCodeCtrl.text = initialCode;
+    } else {
+      _verifyCodeCtrl.clear();
+    }
     ParticipantLead? matchedLead;
     String? searchError;
 
@@ -1426,7 +1692,7 @@ class _RoomDetailAdminScreenState extends State<RoomDetailAdminScreen> with Sing
               if (query.isEmpty) {
                 setDialogState(() {
                   matchedLead = null;
-                  searchError = 'Ketik kode tiket terlebih dahulu!';
+                  searchError = 'Ketik atau scan kode tiket terlebih dahulu!';
                 });
                 return;
               }
@@ -1447,6 +1713,10 @@ class _RoomDetailAdminScreenState extends State<RoomDetailAdminScreen> with Sing
               });
             }
 
+            if (initialCode != null && matchedLead == null && searchError == null && _verifyCodeCtrl.text.isNotEmpty) {
+              WidgetsBinding.instance.addPostFrameCallback((_) => doSearch());
+            }
+
             return AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
               title: const Row(
@@ -1464,16 +1734,68 @@ class _RoomDetailAdminScreenState extends State<RoomDetailAdminScreen> with Sing
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Ketik atau scan kode klaim tiket siswa untuk memverifikasi keabsahan sebelum penyerahan hadiah:',
+                        'Arahkan kamera untuk memindai QR code tiket hadiah siswa, atau ketik kode klaim:',
                         style: TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.3),
                       ),
                       const SizedBox(height: 14),
+
+                      // Dedicated Scan Camera Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final scanned = await Navigator.push<String>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const QrScannerScreen(
+                                  title: 'Scan QR Tiket Hadiah',
+                                  helperText: 'Arahkan kamera ke QR Code tiket hadiah siswa',
+                                ),
+                              ),
+                            );
+                            if (scanned != null && scanned.trim().isNotEmpty) {
+                              _verifyCodeCtrl.text = scanned.trim().toUpperCase();
+                              doSearch();
+                            }
+                          },
+                          icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
+                          label: const Text(
+                            'BUKA SCANNER KAMERA QR',
+                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFDC2626),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            elevation: 2,
+                            shadowColor: const Color(0xFFDC2626).withValues(alpha: 0.3),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      Row(
+                        children: [
+                          Expanded(child: Container(height: 1, color: const Color(0xFFE2E8F0))),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              'ATAU KETIK KODE MANUAL',
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8)),
+                            ),
+                          ),
+                          Expanded(child: Container(height: 1, color: const Color(0xFFE2E8F0))),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
                       Row(
                         children: [
                           Expanded(
                             child: TextField(
                               controller: _verifyCodeCtrl,
-                              autofocus: true,
+                              autofocus: initialCode == null,
                               textCapitalization: TextCapitalization.characters,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w900,
@@ -1483,7 +1805,7 @@ class _RoomDetailAdminScreenState extends State<RoomDetailAdminScreen> with Sing
                               decoration: InputDecoration(
                                 hintText: 'Contoh: SP-2026',
                                 hintStyle: const TextStyle(fontWeight: FontWeight.normal, letterSpacing: 0),
-                                prefixIcon: const Icon(Icons.qr_code_2_rounded, size: 20, color: Color(0xFFDC2626)),
+                                prefixIcon: const Icon(Icons.pin_rounded, size: 20, color: Color(0xFFDC2626)),
                                 filled: true,
                                 fillColor: const Color(0xFFF8FAFC),
                                 border: OutlineInputBorder(
@@ -1891,41 +2213,59 @@ class _RoomDetailAdminScreenState extends State<RoomDetailAdminScreen> with Sing
               ),
               const SizedBox(height: 10),
 
-              // Action Buttons Row: Export CSV & Verify Code
+              // Action Buttons Row: Scan QR, Manual Code, & Export CSV
               Row(
                 children: [
                   Expanded(
+                    flex: 2,
                     child: ElevatedButton.icon(
-                      onPressed: _openVerifyDialog,
+                      onPressed: _scanQrTicket,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFDC2626),
                         foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        elevation: 2,
+                        shadowColor: const Color(0xFFDC2626).withValues(alpha: 0.3),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                      icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
                       label: const Text(
-                        'VERIFIKASI TIKET',
-                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 0.5),
+                        'SCAN QR TIKET',
+                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 0.5),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
+                    flex: 1,
                     child: OutlinedButton.icon(
-                      onPressed: _exportCsv,
+                      onPressed: () => _openVerifyDialog(),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF0F172A),
                         side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      icon: const Icon(Icons.file_download_outlined, size: 18, color: Color(0xFF059669)),
+                      icon: const Icon(Icons.keyboard_outlined, size: 16),
                       label: const Text(
-                        'EXPORT CSV',
-                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 0.5),
+                        'MANUAL',
+                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11),
                       ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: _exportCsv,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF0F172A),
+                      side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                    ),
+                    icon: const Icon(Icons.file_download_outlined, size: 18, color: Color(0xFF059669)),
+                    label: const Text(
+                      'CSV',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11),
                     ),
                   ),
                 ],

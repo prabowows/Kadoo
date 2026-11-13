@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class QrScannerScreen extends StatefulWidget {
-  const QrScannerScreen({super.key});
+  final String title;
+  final String helperText;
+
+  const QrScannerScreen({
+    super.key,
+    this.title = 'Scan QR Booth',
+    this.helperText = 'Arahkan kamera ke QR Code di booth',
+  });
 
   @override
   State<QrScannerScreen> createState() => _QrScannerScreenState();
@@ -155,9 +162,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       ),
 
                       // Title
-                      const Text(
-                        'Scan QR Booth',
-                        style: TextStyle(
+                      Text(
+                        widget.title,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -237,9 +244,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                   ),
-                  child: const Text(
-                    'Arahkan kamera ke QR Code di booth',
-                    style: TextStyle(
+                  child: Text(
+                    widget.helperText,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
